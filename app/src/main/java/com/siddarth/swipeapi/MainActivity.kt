@@ -54,7 +54,9 @@ import com.siddarth.swipeapi.ui.theme.SwipeAPITheme
 import android.content.ContentResolver
 import android.content.res.Configuration
 import android.database.Cursor
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -223,15 +225,18 @@ class MainActivity : ComponentActivity() {
                     onValueChange = { price = it },
                     label = { Text("Price*", color = MaterialTheme.colorScheme.onSecondaryContainer) },
                     modifier = Modifier.fillMaxWidth(),
-                    isError = price.isEmpty()
-                )
+                    isError = price.isEmpty(),
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
+
+                    )
 
                 OutlinedTextField(
                     value = tax,
                     onValueChange = { tax = it },
                     label = { Text("Tax*", color = MaterialTheme.colorScheme.onSecondaryContainer) },
                     modifier = Modifier.fillMaxWidth(),
-                    isError = tax.isEmpty()
+                    isError = tax.isEmpty(),
+                    keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number)
                 )
                 Button(
                     onClick = {
@@ -246,6 +251,7 @@ class MainActivity : ComponentActivity() {
 
                 Button(
                     onClick = {
+                        Toast.makeText(this@MainActivity, "Added product successfully!!", Toast.LENGTH_SHORT).show()
                         if (productName.isNotEmpty() && productType.isNotEmpty() && price.isNotEmpty() && tax.isNotEmpty()) {
                             val product = Product(
                                 product_name = productName,
