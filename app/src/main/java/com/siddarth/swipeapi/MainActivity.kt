@@ -250,8 +250,16 @@ class MainActivity : ComponentActivity() {
                             val product = Product(
                                 product_name = productName,
                                 product_type = productType,
-                                price = price.toDouble(),
-                                tax = tax.toDouble(),
+                                price = try {
+                                    price.toDouble()
+                                } catch (e: NumberFormatException) {
+                                    0.0
+                                },
+                                tax = try {
+                                    tax.toDouble()
+                                } catch (e: NumberFormatException) {
+                                    0.0
+                                },
                                 image = ""
                             )
                             onAddProduct(product)
@@ -383,7 +391,7 @@ class MainActivity : ComponentActivity() {
             val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
             LazyVerticalGrid(
-                columns =if (isLandscape) GridCells.Fixed(3) else GridCells.Fixed(2),
+                columns =if (isLandscape) GridCells.Fixed(4) else GridCells.Fixed(2),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(filteredProducts) { product ->
