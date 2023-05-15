@@ -35,8 +35,8 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 //import androidx.compose.ui.graphics.Color
@@ -52,7 +52,10 @@ import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import com.siddarth.swipeapi.ui.theme.SwipeAPITheme
 import android.content.ContentResolver
+import android.content.res.Configuration
 import android.database.Cursor
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.style.TextOverflow
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -120,7 +123,7 @@ class MainActivity : ComponentActivity() {
                         AddProductScreen(
                             onAddProduct = { product ->
                                 println(product)
-                                createProduct(product = product)
+
                                 // Handle adding the product here
                                 // For example, you can add the product to the list and navigate back to the product list screen
                                 productListState.add(product)
@@ -201,7 +204,7 @@ class MainActivity : ComponentActivity() {
                     value = productName,
                     onValueChange = { productName = it },
                     label = {
-                        Text("Product Name*")
+                        Text("Product Name*", color = MaterialTheme.colorScheme.onSecondaryContainer)
                     },
                     modifier = Modifier.fillMaxWidth(),
                     isError = productName.isEmpty()
@@ -210,7 +213,7 @@ class MainActivity : ComponentActivity() {
                 OutlinedTextField(
                     value = productType,
                     onValueChange = { productType = it },
-                    label = { Text("Product Type*") },
+                    label = { Text("Product Type*", color = MaterialTheme.colorScheme.onSecondaryContainer) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = productType.isEmpty()
                 )
@@ -218,7 +221,7 @@ class MainActivity : ComponentActivity() {
                 OutlinedTextField(
                     value = price,
                     onValueChange = { price = it },
-                    label = { Text("Price*") },
+                    label = { Text("Price*", color = MaterialTheme.colorScheme.onSecondaryContainer) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = price.isEmpty()
                 )
@@ -226,7 +229,7 @@ class MainActivity : ComponentActivity() {
                 OutlinedTextField(
                     value = tax,
                     onValueChange = { tax = it },
-                    label = { Text("Tax*") },
+                    label = { Text("Tax*", color = MaterialTheme.colorScheme.onSecondaryContainer) },
                     modifier = Modifier.fillMaxWidth(),
                     isError = tax.isEmpty()
                 )
@@ -236,9 +239,8 @@ class MainActivity : ComponentActivity() {
 
                     },
                     modifier = Modifier.align(Alignment.CenterHorizontally)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
-                    Text("Attach Image", modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer))
+                    Text("Attach Image")
 
                 }
 
@@ -253,6 +255,27 @@ class MainActivity : ComponentActivity() {
                                 image = ""
                             )
                             onAddProduct(product)
+                            RetrofitInstance.apiInterface.createProduct(product = product).enqueue(object: Callback<Product>
+                            {
+                                override fun onResponse(call: Call<Product>, response: Response<Product>) {
+
+                                    if (response.isSuccessful) {
+                                        val createdProduct = response.body()
+                                        if (createdProduct != null) {
+                                            // Product created successfully
+                                            onAddProduct(createdProduct)
+                                        } else {
+                                            // Handle the case when the response body is null
+                                        }
+                                    } else {
+                                        // Handle the case when the response is not successful
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<Product>, t: Throwable) {
+                                    // Handle the failure case
+                                }
+                            })
                         }
                     },
                     modifier = Modifier
@@ -347,7 +370,7 @@ class MainActivity : ComponentActivity() {
             TextField(
                 value = searchQueryState.value,
                 onValueChange = { searchQueryState.value = it },
-                label = { Text("Search") },
+                label = { Text("Search", color = MaterialTheme.colorScheme.onSecondaryContainer) },
                 modifier = Modifier
                     .padding(16.dp)
                     .fillMaxWidth()
@@ -356,9 +379,11 @@ class MainActivity : ComponentActivity() {
             val filteredProducts = products.filter { product ->
                 product.product_name.contains(searchQueryState.value, ignoreCase = true)
             }
+            val configuration = LocalConfiguration.current
+            val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
             LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
+                columns =if (isLandscape) GridCells.Fixed(3) else GridCells.Fixed(2),
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 items(filteredProducts) { product ->
@@ -398,16 +423,23 @@ class MainActivity : ComponentActivity() {
                     verticalAlignment = Alignment.CenterVertically
                 ){
                     Text(
-                        text = product.product_name.capitalize(),
+//                        text = product.product_name.capitalize(),
+                        text = if (product.product_name.capitalize().length > 15) {
+                            "${product.product_name.capitalize().substring(0, 15)}..."
+                        } else {
+                            product.product_name.capitalize()
+                        },
                         style = androidx.compose.ui.text.TextStyle(
-                            fontSize = 25.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     )
                     Text(text= product.price.toString(),
                         style = androidx.compose.ui.text.TextStyle(
                             fontSize = 25.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     )
                 }
@@ -418,43 +450,13 @@ class MainActivity : ComponentActivity() {
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ){
-                    Text(text = product.product_type)
-                    Text(text = product.tax.toString())
+                    Text(text = product.product_type, color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text(text = product.tax.toString(), color = MaterialTheme.colorScheme.onSecondaryContainer)
                 }
             }
         }
     }
-    private fun createProduct(product: Product){
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://app.getswipe.in/api/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
 
-        val apiInterface = retrofit.create(ApiInterface::class.java)
-
-        val call = apiInterface.createProduct(product)
-        call.enqueue(object : Callback<Product> {
-            override fun onResponse(call: Call<Product>, response: Response<Product>) {
-                println("debug0")
-                println(response.errorBody())
-                if (response.isSuccessful) {
-                    // Handle successful response
-                    val createdProduct = response.body()
-                    println("debug")
-                    println(response.body())
-                } else {
-                    // Handle unsuccessful response
-                    val errorBody = response.errorBody()
-                    // TODO: Handle the error response
-                }
-            }
-
-            override fun onFailure(call: Call<Product>, t: Throwable) {
-                // Handle network errors or other failures
-                t.printStackTrace()
-            }
-        })
-    }
     private fun getData(callback: (List<Product>?) -> Unit) {
         val progressDialog = ProgressDialog(this)
         progressDialog.setCancelMessage("The data is being fetched")
